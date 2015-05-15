@@ -11,6 +11,7 @@ router.register(r'racks', views.RackViewSet)
 router.register(r'enclosures', views.EnclosureViewSet)
 router.register(r'servertypes', views.ServerTypeViewSet)
 router.register(r'servers', views.ServerViewSet)
+router.register(r'basecomponents', views.BaseComponentViewSet)
 router.register(r'cpus', views.CpuViewSet)
 router.register(r'hdds', views.HddViewSet)
 router.register(r'rams', views.RamViewSet)
@@ -20,7 +21,6 @@ router.register(r'nets', views.NetViewSet)
 
 
 
-#router.register(r'enclosures', views.EnclosureViewSet)
 urlpatterns = patterns(
     'core.views',
     url(r'', include(router.urls))

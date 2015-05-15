@@ -2,12 +2,13 @@ from rest_framework import serializers
 from .models import (
     Datacenter, Floor, Room, Row,
     Rack, Enclosure, ServerType, Server,
-    Cpu, Hdd, Ram, Raid, Net
+    BaseComponent, Cpu, Hdd, Ram, Raid, Net
 )
 
 default_fields = ('pk', 'name',)
 
 class DataCenterSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Datacenter
         fields = default_fields + ('address',)
@@ -33,7 +34,7 @@ class RowSerializer(serializers.ModelSerializer):
 class RackSerializer(serializers.ModelSerializer):
     class Meta:
         model = Rack
-        fields = default_fields + ('row',)
+        fields = default_fields + ('row', 'available_units',)
 
 class EnclosureSerializer(serializers.ModelSerializer):
     class Meta:
@@ -50,18 +51,32 @@ class ServerTypeSerializer(serializers.ModelSerializer):
         )
 
 
+class BaseComponentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BaseComponent
+        fields = default_fields + (
+            'manufacturer', 'model', 'serial_number', 'server', 'component_type'
+        )
+
+        # сюда можно добавить не просто поле component_type,
+        # а целый объект - child
+
 class ServerSerializer(serializers.ModelSerializer):
+
+    plugged_components = BaseComponentSerializer(many=True, read_only=True)
     class Meta:
         model = Server
         fields = default_fields + (
-            'rack', 'enclosure', 'server_type',
+            'rack', 'enclosure', 'server_type', 'plugged_components',
         )
-
 
 class CpuSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cpu
         fields = default_fields + ('server', 'socket',)
+
+
+
 
 
 class HddSerializer(serializers.ModelSerializer):
@@ -93,3 +108,5 @@ class NetSerializer(serializers.ModelSerializer):
         fields = default_fields + (
             'server', 'connection_type',
         )
+
+
