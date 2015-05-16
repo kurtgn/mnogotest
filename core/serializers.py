@@ -50,12 +50,15 @@ class ServerTypeSerializer(serializers.ModelSerializer):
             'hdd_standard',
         )
 
+base_component_fields = (
+    'manufacturer', 'model', 'serial_number', 'server',
+)
 
 class BaseComponentSerializer(serializers.ModelSerializer):
     class Meta:
         model = BaseComponent
-        fields = default_fields + (
-            'manufacturer', 'model', 'serial_number', 'server', 'component_type'
+        fields = default_fields + base_component_fields + (
+            'component_type',
         )
 
         # сюда можно добавить не просто поле component_type,
@@ -73,17 +76,14 @@ class ServerSerializer(serializers.ModelSerializer):
 class CpuSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cpu
-        fields = default_fields + ('server', 'socket',)
-
-
-
+        fields = default_fields + base_component_fields + ('socket',)
 
 
 class HddSerializer(serializers.ModelSerializer):
     class Meta:
         model = Hdd
-        fields = default_fields + (
-            'server', 'typesize', 'volume',
+        fields = default_fields + base_component_fields + (
+            'typesize', 'volume',
             'connection_type', 'standard',
         )
 
@@ -91,22 +91,22 @@ class HddSerializer(serializers.ModelSerializer):
 class RamSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ram
-        fields = default_fields + (
-            'server', 'volume', 'standard',
+        fields = default_fields + base_component_fields + (
+            'volume', 'standard',
         )
 
 class RaidSerializer(serializers.ModelSerializer):
     class Meta:
         model = Raid
-        fields = default_fields + (
-            'server', 'connection_type',
+        fields = default_fields + base_component_fields + (
+            'connection_type',
         )
 
 class NetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Net
-        fields = default_fields + (
-            'server', 'connection_type',
+        fields = default_fields + base_component_fields + (
+            'connection_type',
         )
 
 

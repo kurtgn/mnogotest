@@ -112,13 +112,15 @@ class BaseComponent(BaseModel):
                 pass
     @property
     def component_type(self):
-        if type(self.cast()) is None:
-            # если это child
-            return self.__class__.__name__
-        else:
-            # если это parent
-            return str(type(self.cast())).split('.')[-1][:-2]
-
+        try:
+            if type(self.cast()) is None:
+                # если это child
+                return self.__class__.__name__
+            else:
+                # если это parent
+                return str(type(self.cast())).split('.')[-1][:-2]
+        except:
+            print('exception')
 
 
 
