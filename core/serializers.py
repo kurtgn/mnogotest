@@ -70,7 +70,8 @@ class ServerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Server
         fields = default_fields + (
-            'rack', 'enclosure', 'server_type', 'plugged_components',
+            'rack', 'enclosure', 'server_type',
+            'plugged_components', 'units_height',
         )
 
 class CpuSerializer(serializers.ModelSerializer):

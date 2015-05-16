@@ -40,10 +40,10 @@ class Rack(BaseModel):
     @property
     def available_units(self):
         '''
-        агрегируем корзины в этой стойке по высоте
-        если стоек нет, то aggregate выдает None
-        и мы вместо None ставим 0
-        потом складываем с кол-вом серверов.
+        агрегируем корзины и сервера в этой стойке по высоте.
+        если объектов в стойке нет, то aggregate выдает None
+        и мы вместо None ставим 0.
+
 
         в self.server_set.all() не войдут сервера, лежащие в корзинах,
         если при постановке сервера в стойку запретить присваивать серверу
@@ -52,8 +52,10 @@ class Rack(BaseModel):
         sum_enclosure_height = self.enclosure_set.aggregate(models.Sum('units_height'))['units_height__sum']
         if sum_enclosure_height is None:
             sum_enclosure_height = 0
-        single_servers = self.server_set.all()
-        used_units = sum_enclosure_height + len(single_servers)
+        sum_single_servers_height = self.server_set.aggregate(models.Sum('units_height'))['units_height__sum']
+        if sum_single_servers_height is None:
+            sum_single_servers_height = 0
+        used_units = sum_enclosure_height + sum_single_servers_height
         return self.unit_capacity - used_units
 
 
@@ -83,6 +85,7 @@ class Server(BaseModel):
     rack = models.ForeignKey(Rack, blank=True, null=True)
     enclosure = models.ForeignKey(Enclosure, blank=True, null=True)
     # нужно следить, чтобы невозможно было добавить сразу оба FK rack и enclosure
+    units_height = models.IntegerField(default=1)
     server_type = models.ForeignKey(ServerType)
 
     @property
