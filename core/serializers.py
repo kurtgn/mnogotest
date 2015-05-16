@@ -62,7 +62,7 @@ class BaseComponentSerializer(serializers.ModelSerializer):
         )
 
         # сюда можно добавить не просто поле component_type,
-        # а целый объект - child
+        # а целый вложенный child объект (cpu, ram и тд)
 
 class ServerSerializer(serializers.ModelSerializer):
 

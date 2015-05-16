@@ -1,4 +1,5 @@
 from django.db import models
+from model_utils.managers import InheritanceManager
 
 # Create your models here.
 
@@ -43,7 +44,6 @@ class Rack(BaseModel):
         агрегируем корзины и сервера в этой стойке по высоте.
         если объектов в стойке нет, то aggregate выдает None
         и мы вместо None ставим 0.
-
 
         в self.server_set.all() не войдут сервера, лежащие в корзинах,
         если при постановке сервера в стойку запретить присваивать серверу
@@ -98,33 +98,16 @@ class BaseComponent(BaseModel):
     serial_number = models.CharField(max_length=50)
     server = models.ForeignKey(Server, null=True, blank=True)
 
-    def cast(self):
-        '''
-        метод, который возвращает наследуемый класс.
-        так мы сможем сделать server.basecomponent_set.all()
-        получить список детей
-        к каждому применить cast()
-        и получить уже конкретные компоненты
-        '''
-        for name in dir(self):
-            try:
-                attr = getattr(self, name)
-                if isinstance(attr, self.__class__) and type(attr) != type(self):
-                    return attr
-            except:
-                pass
+    objects = InheritanceManager()
+    '''
+    менеджер, кот.позволяет доставать детей
+    из родительских объектов BaseComponent
+    '''
+
     @property
     def component_type(self):
-        try:
-            if type(self.cast()) is None:
-                # если это child
-                return self.__class__.__name__
-            else:
-                # если это parent
-                return str(type(self.cast())).split('.')[-1][:-2]
-        except:
-            print('exception')
-
+        subclass = BaseComponent.objects.get_subclass(pk=self.pk)
+        return subclass.__class__.__name__
 
 
 class Cpu(BaseComponent):
@@ -137,28 +120,28 @@ class Cpu(BaseComponent):
         позже это исключение можно
         красиво обернуть в json на уровне rest
 
-        аналогично перехватываем присвоение
+        аналогично можно перехватить присвоение
         в объектах hdd, ram, raid, net
         '''
         if key == 'server' and value is not None:
-            serv_socket = value.server_type.cpu_socket
-            if serv_socket != self.socket:
-                raise ValueError('Wrong type of component')
+            compatible_socket = value.server_type.cpu_socket
+            if compatible_socket != self.socket:
+                raise AttributeError('Incompatible component')
 
             '''
-            выбрать все компоненты сервера
+            Выбрать все компоненты сервера,
             отобрать из них только CPU
             и сравнить допустимое макс.кол-во с текущим кол-вом.
-            если превышает - выдать ошибку.
+            Если текущее кол-во равно допустимому
+            (и если self не входит в эти процессоры),
+            выдаем ошибку.
 
             то же самое можно проделать в объектах hdd, ram, raid, net
             '''
-            components = value.basecomponent_set.all()
-            cpus = [e for e in components if e.component_type == 'Cpu']
-            print('current cpus length:', len(cpus))
-            print('available cpus length:', value.server_type.cpu_slots)
-            if len(cpus) == value.server_type.cpu_slots:
-                raise ValueError('Exceeded number of slots')
+            components = value.basecomponent_set.select_subclasses()
+            cpus = [e for e in components if isinstance(e, Cpu)]
+            if len(cpus) == value.server_type.cpu_slots and self not in cpus:
+                raise AttributeError('Exceeded number of slots')
         super(Cpu, self).__setattr__(key, value)
 
 
